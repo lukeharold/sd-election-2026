@@ -1,0 +1,50 @@
+# Every 30 minutes, look for a new San Diego Registrar post. When there is one,
+# rebuild and republish the Datawrapper maps. A failed run leaves the live maps
+# as they are, and GitHub emails you.
+name: Update election maps
+
+on:
+  schedule:
+    # Noon to midnight Pacific (20:00 to 07:59 UTC during standard time).
+    - cron: "*/30 20-23,0-7 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Download and check only, without publishing"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-maps
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check for a new post and update the maps
+        env:
+          DATAWRAPPER_TOKEN: ${{ secrets.DATAWRAPPER_TOKEN }}
+        run: python update.py ${{ inputs.dry_run && '--dry-run' || '' }}
+
+      - name: Save the post that was just published
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state/last_post.json
+          if git diff --cached --quiet; then
+            echo "Nothing new to save."
+          else
+            git commit -m "Published results post"
+            git push
+          fi

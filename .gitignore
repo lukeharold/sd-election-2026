@@ -1,0 +1,15 @@
+# Only the files listed here go in the repo.
+*
+!.gitignore
+!README.md
+!build_maps.py
+!push_datawrapper.py
+!update.py
+!datawrapper_charts.json
+!boundaries/
+!boundaries/sd_precincts_2026_11_03.json
+!state/
+!state/last_post.json
+!.github/
+!.github/workflows/
+!.github/workflows/update-maps.yml
